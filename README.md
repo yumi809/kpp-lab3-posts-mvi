@@ -1,46 +1,25 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+# PostsMvi — Lab 3: MVVM → MVI, use cases, `Result.map`
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Kotlin Multiplatform (Android, iOS, Desktop) REST client for `https://dummyjson.com/posts`
+(GET / POST / PUT / DELETE), based on the MVVM client from labs 10–15 of the previous semester
+(commit `[0]`).
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## What was done
 
-### Running the apps
+| Task | Where |
+|---|---|
+| 1. Presentation layer refactored **MVVM → MVI** | `presentation/posts/`: `PostsState` (model), `PostsIntent` (user intents), `PostsEffect` (one-off effects → snackbar), `PostsMutation` + pure `PostsReducer`, `PostsViewModel.onIntent()` as the single entry point, stateless `PostsScreen` |
+| 2. **Use cases** in the domain layer | `domain/posts/usecase/PostUseCases.kt`: `GetPostsUseCase`, `CreatePostUseCase` (normalises text/tags), `EditPostBodyUseCase`, `DeletePostUseCase`; domain models `Post`, `NewPost`; `PostRepository` contract |
+| 3. **`map` extension for `Result`**, used in the data layer | `domain/common/Result.kt` (`map`, `onSuccess`, `onFailure`, typed `DataError`); `data/posts/RemotePostRepository.kt` maps DTOs → domain models with `.map { it.toDomain() }` |
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+Data flow: `UI —Intent→ ViewModel → UseCase → Repository (data) → Ktor API`
+and back: `DTO —Result.map→ domain model → Mutation → Reducer → new State → UI`.
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- Desktop app:
-  - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :desktopApp:run`
-- Web app:
-  - Wasm target (faster, modern browsers): `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
-  - JS target (slower, supports older browsers): `./gradlew :webApp:jsBrowserDevelopmentRun`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+Unit tests (`shared/src/commonTest`): `ResultMapTest`, `PostsReducerTest`.
 
-### Running tests
+## Run
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :shared:jvmTest`
-- Web tests:
-  - Wasm target: `./gradlew :shared:wasmJsTest`
-  - JS target: `./gradlew :shared:jsTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
-
----
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
-
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+- Android: `./gradlew :androidApp:assembleDebug` (or Run in Android Studio)
+- Desktop: `./gradlew :desktopApp:run`
+- Tests: `./gradlew :shared:jvmTest`
+- iOS: open `iosApp` in Xcode (macOS only)

@@ -8,41 +8,54 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import org.koin.plugin.module.dsl.viewModel
-import ua.chnu.kpp.posts.data.posts.AppPostApiService
-import ua.chnu.kpp.posts.data.posts.PostApiService
-import ua.chnu.kpp.posts.domain.posts.AppPostRepository
+import ua.chnu.kpp.posts.data.posts.RemotePostRepository
+import ua.chnu.kpp.posts.data.posts.remote.KtorPostApiService
+import ua.chnu.kpp.posts.data.posts.remote.PostApiService
 import ua.chnu.kpp.posts.domain.posts.PostRepository
-import ua.chnu.kpp.posts.presentation.AppViewModel
+import ua.chnu.kpp.posts.domain.posts.usecase.CreatePostUseCase
+import ua.chnu.kpp.posts.domain.posts.usecase.DeletePostUseCase
+import ua.chnu.kpp.posts.domain.posts.usecase.EditPostBodyUseCase
+import ua.chnu.kpp.posts.domain.posts.usecase.GetPostsUseCase
+import ua.chnu.kpp.posts.presentation.posts.PostsViewModel
 
-val networkModule = module {
+/** Data layer: HTTP client, API service and repository implementation. */
+val dataModule = module {
     single {
         HttpClient {
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.INFO
                 logger = object : Logger {
-                    override fun log(message: String) {
-                        println("KtorLogger: $message")
-                    }
+                    override fun log(message: String) = println("Ktor: $message")
                 }
             }
             install(ContentNegotiation) {
                 json(Json {
-                    prettyPrint = true
-                    isLenient = true
                     ignoreUnknownKeys = true
+                    isLenient = true
                 })
             }
         }
     }
-
-    singleOf(::AppPostApiService) { bind<PostApiService>() }
+    singleOf(::KtorPostApiService) { bind<PostApiService>() }
+    singleOf(::RemotePostRepository) { bind<PostRepository>() }
 }
+
+/** Domain layer: use cases are cheap and stateless, so a new instance per injection is fine. */
+val domainModule = module {
+    factoryOf(::GetPostsUseCase)
+    factoryOf(::CreatePostUseCase)
+    factoryOf(::EditPostBodyUseCase)
+    factoryOf(::DeletePostUseCase)
+}
+
+val presentationModule = module {
+    viewModelOf(::PostsViewModel)
+}
+
 val appModule = module {
-    includes(networkModule)
-    singleOf(::AppPostRepository) { bind<PostRepository>() }
-    viewModelOf(::AppViewModel)
+    includes(dataModule, domainModule, presentationModule)
 }

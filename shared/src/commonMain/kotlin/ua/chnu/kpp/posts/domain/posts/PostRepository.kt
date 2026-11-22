@@ -1,14 +1,15 @@
 package ua.chnu.kpp.posts.domain.posts
 
-import ua.chnu.kpp.posts.data.common.NetworkResult
-import ua.chnu.kpp.posts.data.posts.model.requests.NewPost
-import ua.chnu.kpp.posts.data.posts.model.responses.DeletedPost
-import ua.chnu.kpp.posts.data.posts.model.responses.Post
-import ua.chnu.kpp.posts.data.posts.model.responses.Posts
+import ua.chnu.kpp.posts.domain.common.Result
+import ua.chnu.kpp.posts.domain.posts.model.NewPost
+import ua.chnu.kpp.posts.domain.posts.model.Post
 
+/** Domain contract; implemented in the data layer. Works only with domain models. */
 internal interface PostRepository {
-    suspend fun getAllPosts(): NetworkResult<Posts>
-    suspend fun addPost(post: NewPost): NetworkResult<Post>
-    suspend fun updatePost(post: Post): NetworkResult<Post>
-    suspend fun deletePost(postId: Int): NetworkResult<DeletedPost>
+    suspend fun getPosts(limit: Int): Result<List<Post>>
+    suspend fun createPost(post: NewPost): Result<Post>
+    suspend fun updatePost(post: Post): Result<Post>
+
+    /** @return id of the removed post. */
+    suspend fun deletePost(id: Int): Result<Int>
 }
