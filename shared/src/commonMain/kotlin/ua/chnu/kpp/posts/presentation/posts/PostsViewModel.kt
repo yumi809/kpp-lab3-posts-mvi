@@ -100,7 +100,7 @@ class PostsViewModel internal constructor(
     }
 
     private inline fun withFirstPost(action: (Post) -> Unit) {
-        val first = _state.value.posts.firstOrNull()
+        val first = _state.value.firstRemotePost
         if (first == null) {
             sendEffect(PostsEffect.ShowMessage("Load posts first"))
         } else {

@@ -9,7 +9,12 @@ internal data class PostsState(
     val isLoading: Boolean = false,
     val posts: List<Post> = emptyList(),
     val error: String? = null,
-)
+    /** dummyjson only simulates POST: created posts are not stored on the server. */
+    val localPostIds: Set<Int> = emptySet(),
+) {
+    /** First post that really exists on the server, so PUT/DELETE do not end with 404. */
+    val firstRemotePost: Post? get() = posts.firstOrNull { it.id !in localPostIds }
+}
 
 /** Everything the user can ask the screen to do (the "Intent" in MVI). */
 internal sealed interface PostsIntent {

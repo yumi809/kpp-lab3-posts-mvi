@@ -29,6 +29,14 @@ class PostsReducerTest {
     }
 
     @Test
+    fun createdPostIsNotUsedForPutAndDelete() {
+        // dummyjson does not store created posts, PUT/DELETE on them would return 404
+        val state = PostsReducer.reduce(PostsState(posts = listOf(post(1))), PostsMutation.PostAdded(post(252)))
+        assertEquals(252, state.posts.first().id)
+        assertEquals(1, state.firstRemotePost?.id)
+    }
+
+    @Test
     fun updatedPostReplacesOldOne() {
         val state = PostsReducer.reduce(
             PostsState(posts = listOf(post(1), post(2))),

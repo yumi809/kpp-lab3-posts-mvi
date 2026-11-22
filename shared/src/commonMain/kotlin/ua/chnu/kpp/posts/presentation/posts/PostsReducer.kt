@@ -6,9 +6,13 @@ internal object PostsReducer {
     fun reduce(state: PostsState, mutation: PostsMutation): PostsState = when (mutation) {
         PostsMutation.Loading -> state.copy(isLoading = true, error = null)
 
-        is PostsMutation.PostsLoaded -> state.copy(isLoading = false, posts = mutation.posts)
+        is PostsMutation.PostsLoaded -> state.copy(isLoading = false, posts = mutation.posts, localPostIds = emptySet())
 
-        is PostsMutation.PostAdded -> state.copy(isLoading = false, posts = listOf(mutation.post) + state.posts)
+        is PostsMutation.PostAdded -> state.copy(
+            isLoading = false,
+            posts = listOf(mutation.post) + state.posts.filterNot { it.id == mutation.post.id },
+            localPostIds = state.localPostIds + mutation.post.id,
+        )
 
         is PostsMutation.PostUpdated -> state.copy(
             isLoading = false,
